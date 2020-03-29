@@ -9,7 +9,7 @@ namespace luval.jira.core
     {
         public Label(XElement element) : base(element) { }
 
-        public string Name { get { return GetElementValueOrDefault<string>("label"); } }
+        public string Name { get { return GetElementValueOrDefault<string>(); } }
 
     }
 }

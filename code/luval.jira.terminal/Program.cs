@@ -36,7 +36,10 @@ namespace luval.jira.terminal
             xmlText = xmlText.Replace("&", "_");
             var xml = XElement.Parse(xmlText);
             var search = new Search(xml);
-            var result = search.ToList();
+            var excelReport = new ExcelReport();
+            var excelFile = new FileInfo(@"G:\My Drive\Work\EY\RPA\Client\AMAT\JIRA\report.xlsx");
+            if (excelFile.Exists) excelFile.Delete();
+            excelReport.DoReport(excelFile, search);
         }
 
         /// <summary>

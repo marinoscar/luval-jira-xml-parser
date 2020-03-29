@@ -54,7 +54,13 @@ namespace luval.jira.core
                 d["EstimateInSeconds"] = issue.EstimateInSeconds;
                 d["EpicLink"] = issue.EpicLink;
                 d["Sprint"] = issue.Sprint;
-                d["Labels"] = string.Join(";", issue.Labels);
+                d["Labels"] = string.Join(";", issue.Labels.Select(i => i.Name));
+                d["Phase"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().StartsWith("phase")) ? issue.Labels.First(i => i.Name.ToLowerInvariant().StartsWith("phase")).Name : "";
+                d["IsOppIntake"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-opp-intake")) ? "Yes" : "No";
+                d["IsDesign"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-design")) ? "Yes" : "No";
+                d["IsBuild"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-build")) ? "Yes" : "No";
+                d["IsTest"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-test")) ? "Yes" : "No";
+                d["IsDeploy"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-deploy")) ? "Yes" : "No";
 
                 res.Add(d);
             }

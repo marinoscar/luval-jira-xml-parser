@@ -99,6 +99,11 @@ namespace luval.jira.core
             return GetElementValueOrDefault<T>(Element, elementName, default(T));
         }
 
+        protected virtual T GetElementValueOrDefault<T>()
+        {
+            return ChangeType<T>(Element.Value);
+        }
+
         protected virtual T ChangeType<T>(object val)
         {
             if (Nullable.GetUnderlyingType(typeof(T)) != null)
