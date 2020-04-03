@@ -32,14 +32,14 @@ namespace luval.jira.terminal
         /// <param name="arguments"></param>
         static void DoAction(ConsoleSwitches arguments)
         {
-            var xmlText = File.ReadAllText(@"G:\My Drive\Work\EY\RPA\Client\AMAT\JIRA\sample.xml");
+            if (!arguments.SourceFile.Exists) throw new ArgumentException("File not provided");
+            var xmlText = File.ReadAllText(arguments.SourceFile.FullName);
             xmlText = xmlText.Replace("&", "_");
             var xml = XElement.Parse(xmlText);
             var search = new Search(xml);
-            var excelReport = new ExcelReport();
-            var excelFile = new FileInfo(@"G:\My Drive\Work\EY\RPA\Client\AMAT\JIRA\report.xlsx");
-            if (excelFile.Exists) excelFile.Delete();
-            excelReport.DoReport(excelFile, search);
+            var excelReport = new ExcelReport();;
+            if (arguments.DestinationFile.Exists) arguments.DestinationFile.Delete();
+            excelReport.DoReport(arguments.DestinationFile, search);
         }
 
         /// <summary>

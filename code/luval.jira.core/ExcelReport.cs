@@ -41,7 +41,7 @@ namespace luval.jira.core
             if (!items.Any()) return sheet;
             var epics = items.Where(i => (string)i["IssueType"] == "Epic").ToList();
             var keys = epics.Select(i => i["IssueKey"].ToString()).ToList();
-            var bus = new[] { "O2C", "P2P", "R2R", "Tax", "CoE", "I&W" };
+            var bus = new[] { "O2C", "P2P", "R2R", "TAX", "COE", "I&W", "I_amp;amp;W" };
 
             foreach (var item in items)
             {
@@ -50,7 +50,7 @@ namespace luval.jira.core
                 item["ParentUseCaseLink"] = epic != null ? epic["Link"] : default(string);
                 if (epic != null && !string.IsNullOrWhiteSpace(Convert.ToString(epic["Labels"])))
                 {
-                    item["BusinessGroup"] = ((string)epic["Labels"]).Split(";".ToCharArray()).First(i => bus.Contains(i));
+                    item["BusinessGroup"] = ((string)epic["Labels"]).Split(";".ToCharArray()).FirstOrDefault(i => bus.Contains(i.ToUpper().Trim()));
                     epic["BusinessGroup"] = item["BusinessGroup"];
                 }
                 else

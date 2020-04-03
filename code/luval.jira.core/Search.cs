@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
@@ -56,11 +57,16 @@ namespace luval.jira.core
                 d["Sprint"] = issue.Sprint;
                 d["Labels"] = string.Join(";", issue.Labels.Select(i => i.Name));
                 d["Phase"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().StartsWith("phase")) ? issue.Labels.First(i => i.Name.ToLowerInvariant().StartsWith("phase")).Name : "";
-                d["IsOppIntake"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-opp-intake")) ? "Yes" : "No";
-                d["IsDesign"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-design")) ? "Yes" : "No";
-                d["IsBuild"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-build")) ? "Yes" : "No";
-                d["IsTest"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-test")) ? "Yes" : "No";
-                d["IsDeploy"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-deploy")) ? "Yes" : "No";
+                d["IsOppIntake"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-opp-intake")) ? 1 : 0;
+                d["IsDesign"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-design")) ? 1 : 0;
+                d["IsBuild"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-build")) ? 1 : 0;
+                d["IsTest"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-test")) ? 1 : 0;
+                d["IsDeploy"] = issue.Labels.Any(i => i.Name.ToLowerInvariant().Equals("phase-deploy")) ? 1 : 0;
+                d["InwardsLinks"] = string.Join(",", issue.LinkTypes.SelectMany(i => i.Inwards).Select(i => i.IssueKey));
+                d["OutwardsLinks"] = string.Join(",", issue.LinkTypes.SelectMany(i => i.Outward).Select(i => i.IssueKey));
+                d["InwardsBlockers"] = string.Join(",", issue.LinkTypes.Where(i => i.Name == "Blocks").SelectMany(i => i.Inwards).Select(i => i.IssueKey));
+                d["OutwardsBlockers"] = string.Join(",", issue.LinkTypes.Where(i => i.Name == "Blocks").SelectMany(i => i.Outward).Select(i => i.IssueKey));
+                d["IsBlocked"] = string.IsNullOrWhiteSpace(Convert.ToString(d["OutwardsBlockers"])) && string.IsNullOrWhiteSpace(Convert.ToString(d["InwardsBlockers"])) ? 0 : 1;
 
                 res.Add(d);
             }

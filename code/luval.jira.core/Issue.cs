@@ -25,6 +25,15 @@ namespace luval.jira.core
                 {
                     CustomFiels.Add(new CustomField(cf));
                 }
+
+            LinkTypes = new List<IssueLinkType>();
+            foreach (var issueLinks in Element.Elements().Where(i => i.Name == "issuelinks"))
+            {
+                foreach (var linkType in issueLinks.Elements().Where(i => i.Name == "issuelinktype"))
+                {
+                    LinkTypes.Add(new IssueLinkType(linkType));
+                }
+            }
         }
 
 
@@ -54,6 +63,7 @@ namespace luval.jira.core
 
         public List<Label> Labels { get; private set; }
         public List<CustomField> CustomFiels { get; private set; }
+        public List<IssueLinkType> LinkTypes { get; private set; }
 
 
 

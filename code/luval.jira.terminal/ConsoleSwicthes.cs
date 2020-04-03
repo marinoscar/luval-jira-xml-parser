@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,6 +37,23 @@ namespace luval.jira.terminal
                 return _args[idx + 1];
             }
         }
+
+        public FileInfo SourceFile
+        {
+            get
+            {
+                return new FileInfo(this["-s"]);
+            }
+        }
+
+        public FileInfo DestinationFile
+        {
+            get {
+                return !ContainsSwitch("-d") ? new FileInfo( Path .Combine(SourceFile.DirectoryName, SourceFile.Name.Replace(SourceFile.Extension, ".xlsx"))) : 
+                    new FileInfo(this["-d"]);
+            }
+        }
+
 
         /// <summary>
         /// Indicates if the switch exists in the argument collection
