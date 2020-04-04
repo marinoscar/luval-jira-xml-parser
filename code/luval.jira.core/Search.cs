@@ -50,6 +50,7 @@ namespace luval.jira.core
                 d["Reporter"] = issue.Reporter;
                 d["Created"] = issue.Created;
                 d["Updated"] = issue.Updated;
+                d["Resolved"] = issue.Resolved;
                 d["Due"] = issue.Due;
                 d["OriginalEstimateInSeconds"] = issue.OriginalEstimateInSeconds;
                 d["EstimateInSeconds"] = issue.EstimateInSeconds;
@@ -67,6 +68,7 @@ namespace luval.jira.core
                 d["InwardsBlockers"] = string.Join(",", issue.LinkTypes.Where(i => i.Name == "Blocks").SelectMany(i => i.Inwards).Select(i => i.IssueKey));
                 d["OutwardsBlockers"] = string.Join(",", issue.LinkTypes.Where(i => i.Name == "Blocks").SelectMany(i => i.Outward).Select(i => i.IssueKey));
                 d["IsBlocked"] = string.IsNullOrWhiteSpace(Convert.ToString(d["OutwardsBlockers"])) && string.IsNullOrWhiteSpace(Convert.ToString(d["InwardsBlockers"])) ? 0 : 1;
+                d["HasComments"] = issue.Comments.Count > 0;
 
                 res.Add(d);
             }

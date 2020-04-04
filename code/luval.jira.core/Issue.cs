@@ -13,20 +13,23 @@ namespace luval.jira.core
         {
             Labels = new List<Label>();
             CustomFiels = new List<CustomField>();
+            LinkTypes = new List<IssueLinkType>();
+            Comments = new List<Comment>();
+
             var lbs = GetElement("labels");
             var cfs = GetElement("customfields");
-            if(lbs != null)
-                foreach (var label in lbs.Elements())
-                {
-                    Labels.Add(new Label(label));
-                }
-            if(cfs != null)
-                foreach (var cf in cfs.Elements())
-                {
-                    CustomFiels.Add(new CustomField(cf));
-                }
+            var cms = GetElement("comments");
+    
+            if (lbs != null)
+                lbs.Elements().ToList().ForEach(i => Labels.Add(new Label(i)));
 
-            LinkTypes = new List<IssueLinkType>();
+            if (cfs != null)
+                cfs.Elements().ToList().ForEach(i => CustomFiels.Add(new CustomField(i)));
+
+            if (cms != null)
+                foreach (var comment in cms.Elements().Where(i => i.Name == "comment"))
+                    Comments.Add(new Comment(comment));
+
             foreach (var issueLinks in Element.Elements().Where(i => i.Name == "issuelinks"))
             {
                 foreach (var linkType in issueLinks.Elements().Where(i => i.Name == "issuelinktype"))
@@ -34,6 +37,7 @@ namespace luval.jira.core
                     LinkTypes.Add(new IssueLinkType(linkType));
                 }
             }
+            
         }
 
 
@@ -52,18 +56,20 @@ namespace luval.jira.core
         public string Resolution { get { return GetElementValueOrDefault<string>("resolution"); } }
         public string Assignee { get { return GetElementValueOrDefault<string>("assignee"); } }
         public string Reporter { get { return GetElementValueOrDefault<string>("reporter"); } }
-        public DateTime? Created { get { return GetElementValueOrDefault<DateTime?>("created"); } }
-        public DateTime? Updated { get { return GetElementValueOrDefault<DateTime?>("updated"); } }
-        public DateTime? Due { get { return GetElementValueOrDefault<DateTime?>("due"); } }
+        public DateTimeOffset? Created { get { return GetElementValueOrDefault<DateTimeOffset?>("created"); } }
+        public DateTimeOffset? Updated { get { return GetElementValueOrDefault<DateTimeOffset?>("updated"); } }
+        public DateTimeOffset? Resolved { get { return GetElementValueOrDefault<DateTimeOffset?>("resolved"); } }
+        public DateTimeOffset? Due { get { return GetElementValueOrDefault<DateTime?>("due"); } }
         public long OriginalEstimateInSeconds { get { return GetAttributeOrDefault<long>(GetElement("timeoriginalestimate"), "seconds"); } }
         public long EstimateInSeconds { get { return GetAttributeOrDefault<long>(GetElement("timeestimate"), "seconds"); } }
-        public string EpicLink { get {  var res = CustomFiels.FirstOrDefault(i => i.Name == "Epic Link"); return res != null ? res.Values.First() : string.Empty; } }
+        public string EpicLink { get { var res = CustomFiels.FirstOrDefault(i => i.Name == "Epic Link"); return res != null ? res.Values.First() : string.Empty; } }
         public string Sprint { get { var res = CustomFiels.FirstOrDefault(i => i.Name == "Sprint"); return res != null ? res.Values.First() : string.Empty; } }
 
 
         public List<Label> Labels { get; private set; }
         public List<CustomField> CustomFiels { get; private set; }
         public List<IssueLinkType> LinkTypes { get; private set; }
+        public List<Comment> Comments { get; private set; }
 
 
 

@@ -1,4 +1,5 @@
 ﻿using OfficeOpenXml;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
 using OfficeOpenXml.Table.PivotTable;
 using System;
 using System.Collections.Generic;
@@ -10,21 +11,21 @@ namespace luval.jira.core
 {
     public class ExcelReport
     {
-        public void DoReport(Stream fileStream, Search search)
+        public void DoReport(Stream fileStream, Search search, IEnumerable<string> businessUnits)
         {
-            DoReport(new ExcelPackage(fileStream), search);
+            DoReport(new ExcelPackage(fileStream), search, businessUnits);
         }
 
-        public void DoReport(FileInfo file, Search search)
+        public void DoReport(FileInfo file, Search search, IEnumerable<string> businessUnits)
         {
-            DoReport(new ExcelPackage(file), search);
+            DoReport(new ExcelPackage(file), search, businessUnits);
         }
 
-        public void DoReport(ExcelPackage package, Search search)
+        public void DoReport(ExcelPackage package, Search search, IEnumerable<string> businessUnits)
         {
             using (package)
             {
-                using (var dataSheet = GetAllRecords(package, search))
+                using (var dataSheet = GetAllRecords(package, search, businessUnits))
                 {
                     using (var pivotSheet = CreatePivotTable(package, dataSheet))
                     {
@@ -34,14 +35,13 @@ namespace luval.jira.core
             }
         }
 
-        public ExcelWorksheet GetAllRecords(ExcelPackage package, Search search)
+        public ExcelWorksheet GetAllRecords(ExcelPackage package, Search search, IEnumerable<string> businessUnits)
         {
             var sheet = package.Workbook.Worksheets.Add("All-Records");
             var items = search.ToList();
             if (!items.Any()) return sheet;
             var epics = items.Where(i => (string)i["IssueType"] == "Epic").ToList();
             var keys = epics.Select(i => i["IssueKey"].ToString()).ToList();
-            var bus = new[] { "O2C", "P2P", "R2R", "TAX", "COE", "I&W", "I_amp;amp;W" };
 
             foreach (var item in items)
             {
@@ -50,18 +50,20 @@ namespace luval.jira.core
                 item["ParentUseCaseLink"] = epic != null ? epic["Link"] : default(string);
                 if (epic != null && !string.IsNullOrWhiteSpace(Convert.ToString(epic["Labels"])))
                 {
-                    item["BusinessGroup"] = ((string)epic["Labels"]).Split(";".ToCharArray()).FirstOrDefault(i => bus.Contains(i.ToUpper().Trim()));
+                    item["BusinessGroup"] = ((string)epic["Labels"]).Split(";".ToCharArray()).FirstOrDefault(i => businessUnits.Contains(i.ToUpper().Trim()));
                     epic["BusinessGroup"] = item["BusinessGroup"];
                 }
                 else
                     item["BusinessGroup"] = null;
+                if (item["Resolved"] == null)
+                    item["SecondsToResolution"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Created"]).UtcDateTime).TotalSeconds;
+                else
+                    item["SecondsToResolution"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Resolved"]).UtcDateTime).TotalSeconds;
             }
             var cols = items.First().Keys.ToArray();
             for (int i = 0; i < cols.Length; i++)
             {
                 sheet.Cells[1, i + 1].Value = cols[i];
-                if ((new[] { "Completed", "Updated", "Due" }).Contains(cols[i]))
-                    sheet.Cells[1, i + 1].Style.Numberformat.Format = "MM/dd/yyyy hh:mm:ss";
             }
             for (int r = 0; r < items.Count; r++)
             {
@@ -69,7 +71,15 @@ namespace luval.jira.core
                 {
                     var val = items[r][cols[c]];
                     if (val is string && !string.IsNullOrWhiteSpace((string)val)) val = ((string)val).Trim();
-                    sheet.Cells[r + 2, c + 1].Value = val;
+                    if(val != null && val.GetType() == typeof(DateTimeOffset))
+                    {
+                        var dt = DateTimeOffset.Parse(Convert.ToString(val)).DateTime;
+                        sheet.Cells[r + 2, c + 1].Style.Numberformat.Format = "MM/dd/yyyy HH:mm";
+                        //sheet.Cells[r + 2, c + 1].Formula = string.Format("=DATE({0},{1},{2}) + TIME({3},{4},{5})", dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
+                        sheet.Cells[r + 2, c + 1].Value = dt;
+                    }
+                    else
+                        sheet.Cells[r + 2, c + 1].Value = val;
                 }
             }
             sheet.Tables.Add(sheet.SelectedRange[1, 1, items.Count + 1, cols.Length], "Issues");

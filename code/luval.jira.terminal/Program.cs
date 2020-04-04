@@ -39,7 +39,7 @@ namespace luval.jira.terminal
             var search = new Search(xml);
             var excelReport = new ExcelReport();;
             if (arguments.DestinationFile.Exists) arguments.DestinationFile.Delete();
-            excelReport.DoReport(arguments.DestinationFile, search);
+            excelReport.DoReport(arguments.DestinationFile, search, new[] { "O2C", "P2P", "R2R", "TAX", "COE", "I&W", "I_amp;amp;W" });
         }
 
         /// <summary>

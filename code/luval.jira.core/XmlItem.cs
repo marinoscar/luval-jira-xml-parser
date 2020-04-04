@@ -113,6 +113,11 @@ namespace luval.jira.core
                 {
                     return default(T);
                 }
+                if(Nullable.GetUnderlyingType(typeof(T)) == typeof(DateTimeOffset)){
+                    DateTimeOffset dto;
+                    var res = DateTimeOffset.TryParse(Convert.ToString(val), out dto);
+                    return res ? (T)Convert.ChangeType(dto, Nullable.GetUnderlyingType(typeof(T))) : default(T);
+                }
                 return (T)Convert.ChangeType(val, Nullable.GetUnderlyingType(typeof(T)));
             }
             else
