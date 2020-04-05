@@ -54,6 +54,11 @@ namespace luval.jira.terminal
             }
         }
 
+        public FileInfo TemplateFile
+        {
+            get { return new FileInfo(this["-t"]); }
+        }
+
 
         /// <summary>
         /// Indicates if the switch exists in the argument collection
