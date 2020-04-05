@@ -36,10 +36,23 @@ namespace luval.jira.terminal
             var xmlText = File.ReadAllText(arguments.SourceFile.FullName);
             xmlText = xmlText.Replace("&", "_");
             var xml = XElement.Parse(xmlText);
-            var search = new Search(xml);
-            var excelReport = new ExcelReport();;
+            DoReport(arguments, new Search(xml));
+        }
+
+        static void DoReport(ConsoleSwitches arguments, Search search)
+        {
+            var excelReport = new ExcelReport();
             if (arguments.DestinationFile.Exists) arguments.DestinationFile.Delete();
-            excelReport.DoReport(arguments.DestinationFile, search, new[] { "O2C", "P2P", "R2R", "TAX", "COE", "I&W", "I_amp;amp;W" });
+
+            if (!arguments.HasTemplateFile)
+                using (var output = arguments.DestinationFile.OpenWrite())
+                    excelReport.DoReport(output, null, search, new[] { "O2C", "P2P", "R2R", "TAX", "COE", "I&W", "I_amp;amp;W" });
+            else
+                using (var output = arguments.DestinationFile.OpenWrite())
+                {
+                    using (var template = arguments.TemplateFile.OpenRead())
+                        excelReport.DoReport(output, template, search, new[] { "O2C", "P2P", "R2R", "TAX", "COE", "I&W", "I_amp;amp;W" });
+                }
         }
 
         /// <summary>

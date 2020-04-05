@@ -1,5 +1,6 @@
 ﻿using OfficeOpenXml;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
+using OfficeOpenXml.Table;
 using OfficeOpenXml.Table.PivotTable;
 using System;
 using System.Collections.Generic;
@@ -11,33 +12,24 @@ namespace luval.jira.core
 {
     public class ExcelReport
     {
-        public void DoReport(Stream fileStream, Search search, IEnumerable<string> businessUnits)
+        public void DoReport(Stream output, Stream template, Search search, IEnumerable<string> businessUnits)
         {
-            DoReport(new ExcelPackage(fileStream), search, businessUnits);
-        }
-
-        public void DoReport(FileInfo file, Search search, IEnumerable<string> businessUnits)
-        {
-            DoReport(new ExcelPackage(file), search, businessUnits);
-        }
-
-        public void DoReport(ExcelPackage package, Search search, IEnumerable<string> businessUnits)
-        {
-            using (package)
+            using (var package = template == null ? new ExcelPackage(output) : new ExcelPackage(template))
             {
-                using (var dataSheet = GetAllRecords(package, search, businessUnits))
+                using (var dataSheet = GetAllRecords(package, template != null, search, businessUnits))
                 {
-                    using (var pivotSheet = CreatePivotTable(package, dataSheet))
-                    {
-                        package.Save();
-                    }
+                    if (template == null)
+                        using (var pivotSheet = CreatePivotTable(package, dataSheet))
+                            package.Save();
+                    else
+                        package.SaveAs(output);
                 }
             }
         }
 
-        public ExcelWorksheet GetAllRecords(ExcelPackage package, Search search, IEnumerable<string> businessUnits)
+        public ExcelWorksheet GetAllRecords(ExcelPackage package, bool isTemplate, Search search, IEnumerable<string> businessUnits)
         {
-            var sheet = package.Workbook.Worksheets.Add("All-Records");
+            var sheet = isTemplate ? package.Workbook.Worksheets[1] : package.Workbook.Worksheets.Add("All-Records");
             var items = search.ToList();
             if (!items.Any()) return sheet;
             var epics = items.Where(i => (string)i["IssueType"] == "Epic").ToList();
@@ -64,11 +56,14 @@ namespace luval.jira.core
                     item["HoursToResolution"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Resolved"]).UtcDateTime).TotalHours;
                 item["DaysSinceLastUpdate"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Updated"]).UtcDateTime).TotalDays;
             }
+
+            //Create columns
             var cols = items.First().Keys.ToArray();
-            for (int i = 0; i < cols.Length; i++)
-            {
-                sheet.Cells[1, i + 1].Value = cols[i];
-            }
+            if(!isTemplate)
+                for (int i = 0; i < cols.Length; i++)
+                    sheet.Cells[1, i + 1].Value = cols[i];
+
+            //Enter data
             for (int r = 0; r < items.Count; r++)
             {
                 for (int c = 0; c < cols.Length; c++)
@@ -86,8 +81,28 @@ namespace luval.jira.core
                         sheet.Cells[r + 2, c + 1].Value = val;
                 }
             }
-            sheet.Tables.Add(sheet.SelectedRange[1, 1, items.Count + 1, cols.Length], "Issues");
+            if (isTemplate)
+            {
+                var table = sheet.Tables.First();
+                var range = sheet.SelectedRange[1, 1, items.Count + 1, cols.Length];
+                UpdateTable(ref table, range.Start, range.End);
+            }
+            else
+                sheet.Tables.Add(sheet.SelectedRange[1, 1, items.Count + 1, cols.Length], "Issues");
+            
+                
+
             return sheet;
+        }
+
+        private void UpdateTable(ref ExcelTable table, ExcelCellAddress startAddress, ExcelCellAddress endAddress)
+        {
+             var newRange =
+                string.Format("{0}:{1}", startAddress.Address, endAddress.Address);
+
+            var tableElement = table.TableXml.DocumentElement;
+            tableElement.Attributes["ref"].Value = newRange;
+            tableElement["autoFilter"].Attributes["ref"].Value = newRange;
         }
 
         private string GetPhaseName(string phase)

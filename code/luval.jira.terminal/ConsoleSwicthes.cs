@@ -54,6 +54,7 @@ namespace luval.jira.terminal
             }
         }
 
+        public bool HasTemplateFile { get { return ContainsSwitch("-t"); } }
         public FileInfo TemplateFile
         {
             get { return new FileInfo(this["-t"]); }
