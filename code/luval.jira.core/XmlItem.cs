@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Web;
 using System.Xml.Linq;
 
 namespace luval.jira.core
@@ -119,6 +120,10 @@ namespace luval.jira.core
                     return res ? (T)Convert.ChangeType(dto, Nullable.GetUnderlyingType(typeof(T))) : default(T);
                 }
                 return (T)Convert.ChangeType(val, Nullable.GetUnderlyingType(typeof(T)));
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                return (T)Convert.ChangeType(HttpUtility.HtmlDecode(Convert.ToString(val)).Replace("_amp;amp;", "&"), typeof(T));
             }
             else
                 return (T)Convert.ChangeType(val, typeof(T));

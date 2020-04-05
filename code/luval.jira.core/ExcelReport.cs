@@ -45,6 +45,9 @@ namespace luval.jira.core
 
             foreach (var item in items)
             {
+                item["Phase-Name"] = GetPhaseName(Convert.ToString(item["Phase"]));
+                item["Status-Name"] = GetStatusName(Convert.ToString(item["Status"]));
+
                 var epic = epics.FirstOrDefault(i => (string)i["IssueKey"] == (string)item["EpicLink"]);
                 item["ParentUseCase"] = epic != null ? epic["Summary"] : default(string);
                 item["ParentUseCaseLink"] = epic != null ? epic["Link"] : default(string);
@@ -71,7 +74,7 @@ namespace luval.jira.core
                 {
                     var val = items[r][cols[c]];
                     if (val is string && !string.IsNullOrWhiteSpace((string)val)) val = ((string)val).Trim();
-                    if(val != null && val.GetType() == typeof(DateTimeOffset))
+                    if (val != null && val.GetType() == typeof(DateTimeOffset))
                     {
                         var dt = DateTimeOffset.Parse(Convert.ToString(val)).DateTime;
                         sheet.Cells[r + 2, c + 1].Style.Numberformat.Format = "MM/dd/yyyy HH:mm";
@@ -86,21 +89,47 @@ namespace luval.jira.core
             return sheet;
         }
 
+        private string GetPhaseName(string phase)
+        {
+            var phases = new Dictionary<string, string>() {
+                { "Phase-Opp-Intake", "1 - Opp Intake"},
+                { "Phase-Design", "2 - Design"},
+                { "Phase-Build", "3 - Build"},
+                { "Phase-Test", "4 - Test"},
+                { "Phase-Deploy", "5 - Deploy"}
+            };
+            return phases.ContainsKey(phase.Trim()) ? phases[phase.Trim()] : "99 - Other";
+        }
+
+        private string GetStatusName(string status)
+        {
+            var phases = new Dictionary<string, string>() {
+                { "To Do", "1 - To Do"},
+                { "In Progress", "2 - In Progress"},
+                { "Done", "3 - Done"},
+                { "Resolved", "4 - Resolved"},
+                { "Open", "0 - Open"}
+            };
+            return phases.ContainsKey(status.Trim()) ? phases[status.Trim()] : "99 - Other";
+        }
+
         public ExcelWorksheet CreatePivotTable(ExcelPackage package, ExcelWorksheet dataSheet)
         {
             var sheet = package.Workbook.Worksheets.Add("Pivot");
             var pivotTable = sheet.PivotTables.Add(sheet.Cells["A3"], dataSheet.Cells[dataSheet.Tables["Issues"].Address.Address], "PivotData");
 
+            pivotTable.RowFields.Add(pivotTable.Fields["ProjectKey"]);
             pivotTable.RowFields.Add(pivotTable.Fields["BusinessGroup"]);
             pivotTable.RowFields.Add(pivotTable.Fields["ParentUseCase"]);
-            pivotTable.ColumnFields.Add(pivotTable.Fields["Status"]);
+            pivotTable.ColumnFields.Add(pivotTable.Fields["Phase-Name"]);
+            pivotTable.ColumnFields.Add(pivotTable.Fields["Status-Name"]);
 
             FormatValueField(ref pivotTable, "IssueKey", "Total Stories");
-            FormatValueField(ref pivotTable, "IsOppIntake", "Opp Intake");
-            FormatValueField(ref pivotTable, "IsDesign", "Design");
-            FormatValueField(ref pivotTable, "IsBuild", "Build");
-            FormatValueField(ref pivotTable, "IsTest", "Test");
-            FormatValueField(ref pivotTable, "IsDeploy", "Deploy");
+            //FormatValueField(ref pivotTable, "IsOppIntake", "Opp Intake");
+            //FormatValueField(ref pivotTable, "IsDesign", "Design");
+            //FormatValueField(ref pivotTable, "IsBuild", "Build");
+            //FormatValueField(ref pivotTable, "IsTest", "Test");
+            //FormatValueField(ref pivotTable, "IsDeploy", "Deploy");
 
             return sheet;
         }
