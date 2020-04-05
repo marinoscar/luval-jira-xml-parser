@@ -54,7 +54,8 @@ namespace luval.jira.core
         public string Priority { get { return GetElementValueOrDefault<string>("priority"); } }
         public string Status { get { return GetElementValueOrDefault<string>("status"); } }
         public string Resolution { get { return GetElementValueOrDefault<string>("resolution"); } }
-        public string Assignee { get { return GetElementValueOrDefault<string>("assignee"); } }
+        public string AssigneeName { get { return GetElementValueOrDefault<string>("assignee"); } }
+        public string AssigneeId { get { return GetAttributeOrDefault<string>("assignee", "username"); } }
         public string Reporter { get { return GetElementValueOrDefault<string>("reporter"); } }
         public DateTimeOffset? Created { get { return GetElementValueOrDefault<DateTimeOffset?>("created"); } }
         public DateTimeOffset? Updated { get { return GetElementValueOrDefault<DateTimeOffset?>("updated"); } }

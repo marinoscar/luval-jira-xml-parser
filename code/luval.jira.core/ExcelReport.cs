@@ -59,9 +59,10 @@ namespace luval.jira.core
                 else
                     item["BusinessGroup"] = null;
                 if (item["Resolved"] == null)
-                    item["SecondsToResolution"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Created"]).UtcDateTime).TotalSeconds;
+                    item["HoursToResolution"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Created"]).UtcDateTime).TotalHours;
                 else
-                    item["SecondsToResolution"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Resolved"]).UtcDateTime).TotalSeconds;
+                    item["HoursToResolution"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Resolved"]).UtcDateTime).TotalHours;
+                item["DaysSinceLastUpdate"] = DateTime.UtcNow.Subtract(((DateTimeOffset)item["Updated"]).UtcDateTime).TotalDays;
             }
             var cols = items.First().Keys.ToArray();
             for (int i = 0; i < cols.Length; i++)

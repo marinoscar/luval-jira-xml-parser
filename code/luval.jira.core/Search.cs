@@ -46,7 +46,8 @@ namespace luval.jira.core
                 d["Priority"] = issue.Priority;
                 d["Status"] = issue.Status;
                 d["Resolution"] = issue.Resolution;
-                d["Assignee"] = issue.Assignee;
+                d["AssigneeName"] = issue.AssigneeName;
+                d["AssigneeId"] = issue.AssigneeId;
                 d["Reporter"] = issue.Reporter;
                 d["Created"] = issue.Created;
                 d["Updated"] = issue.Updated;
@@ -68,6 +69,11 @@ namespace luval.jira.core
                 d["InwardsBlockers"] = string.Join(",", issue.LinkTypes.Where(i => i.Name == "Blocks").SelectMany(i => i.Inwards).Select(i => i.IssueKey));
                 d["OutwardsBlockers"] = string.Join(",", issue.LinkTypes.Where(i => i.Name == "Blocks").SelectMany(i => i.Outward).Select(i => i.IssueKey));
                 d["IsBlocked"] = string.IsNullOrWhiteSpace(Convert.ToString(d["OutwardsBlockers"])) && string.IsNullOrWhiteSpace(Convert.ToString(d["InwardsBlockers"])) ? 0 : 1;
+                d["IsToDo"] = issue.Status == "To Do";
+                d["IsInProgress"] = issue.Status == "In Progress";
+                d["IsDone"] = issue.Status == "Done";
+                d["IsOpen"] = issue.Status == "Open";
+                d["IsResolved"] = issue.Status == "Resolved";
                 d["HasComments"] = issue.Comments.Count > 0;
 
                 res.Add(d);
